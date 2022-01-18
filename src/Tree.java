@@ -1,67 +1,69 @@
-// EACH NODE = folder in the file system
-// NODE'S DATA = the number of files, the total size of the files, the folder's name, and a list of child folders
+/*
+    EACH NODE = folder in the file system
+    NODE'S DATA = the number of files, the total size of the files, the folder's name, and a list of child folders
+*/
 
-
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Tree {
     class Node {
         // Data in Node
-//        int numberOfFiles;
-//        long fileSize;
+        long fileSize;
         String folderName;
-        ArrayList<String> fileNames;
 
         // Children
-        ArrayList<Node> childFolders;
+        ArrayList<Node> childrenFiles;
 
-        Node(/*int amountOfFiles, long sizeOfFile,*/ String name) {
-//            this.numberOfFiles = amountOfFiles;
-//            this.fileSize = sizeOfFile;
-            this.folderName = name;
+        Node(Path pathAddress) {
+            try {
+                this.fileSize = Files.size(pathAddress);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Path pathFolderName = pathAddress.getFileName();
+            this.folderName = pathFolderName.toString();
 
-            childFolders = new ArrayList<>();
+            childrenFiles = new ArrayList<>();
         } // Node constructor
     } // End of Node class
 
     private Node root;
+    private final int rootDepthLevel = 0;
 
-    Tree() {
-        Scanner s = new Scanner(System.in);
-        this.root = constructTree(s, null, 0);
-    } // Tree constructor
+    Tree(Path pathProvided) throws Exception {
+        this.root = scanDirectory(pathProvided, rootDepthLevel);
+    } // End of Tree constructor
 
-    // i = current node level
-    private Node constructTree(Scanner s, Node parentNode, int i) {
-        // if parentNode is null, then it is the root node.
-        if (parentNode == null) {
-            System.out.println("Enter the name for the root node");
-        } else {
-            System.out.println("Enter the name for the " + i + "th child of " + parentNode.folderName);
+    public static String spacesToPrint(int depth) {
+        StringBuilder builder = new StringBuilder();
+
+        for(int i = 0; i < depth; i++) {
+            builder.append("  ");
         }
+        return builder.toString();
+    } // End of spacesToPrint()
 
-        String nodeName = s.nextLine();
-        Node currentNode = new Node(nodeName);
+    public Node scanDirectory(Path parentFolder, int depthLevel) throws Exception {
+        Node currentNode = new Node(parentFolder);
+        BasicFileAttributes attributes = Files.readAttributes(parentFolder, BasicFileAttributes.class);
 
-        System.out.println("Enter the number of children for " + currentNode.folderName);
-        int n = s.nextInt(); // todo CODE BREAKS WHEN THIS IS 0
-        /* s.nextLine() below is needed because the Scanner.nextInt method does not read the newline character in the input created by hitting "Enter"
-        and so the call to Scanner.nextLine returns after reading that newline. If not used, the program will not register the child's node name when the
-        recursion starts.
-        */
-        s.nextLine();
+        if(attributes.isDirectory()) {
+            DirectoryStream<Path> paths = Files.newDirectoryStream(parentFolder);
+            System.out.println(spacesToPrint(depthLevel) + "(Folder) > " + currentNode.folderName);
 
-        if(n != 0) {
-            for(int j = 0; j < n; j++) {
-                Node childNode = constructTree(s, currentNode, j);
-                currentNode.childFolders.add(childNode);
+            for(Path tempPath: paths) {
+                Node childNode = scanDirectory(tempPath, depthLevel + 1);
+                currentNode.childrenFiles.add(childNode);
             }
+        } else {
+            System.out.println(spacesToPrint(depthLevel) + " (File) -- " + currentNode.folderName + " (" + currentNode.fileSize + " Bytes)");
         }
 
         return currentNode;
-    }
-
-
-
-}
+    } // End of scanDirectory()
+} // End of Tree class
