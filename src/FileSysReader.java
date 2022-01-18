@@ -10,11 +10,8 @@
 *   USE RECURSION both in the scanning part of your program, and the part that outputs the tree
 */
 
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Scanner;
 
 public class FileSysReader {
